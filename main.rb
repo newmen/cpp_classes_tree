@@ -43,7 +43,7 @@ class ClassTreeGraphBuilder
     defs = []
     header_files.each do |file_name|
       File.open(file_name) do |f|
-        all_defs = f.read.scan(/[^\{]*(?:template\s*<[^>]+>\s*)?(?:class|struct)\s*(\w+)(?:\s*:\s*([\w\s,<>]+))?\s*\{/m)
+        all_defs = f.read.scan(/(?:template\s*<[^>]+>\s*)?(?:class|struct)\s*(\w+)(?:\s*:\s*([\w\s,<>]+))?\s*\{/m)
         all_defs.each do |one_def|
           class_define = ClassDefine.new(one_def.shift)
 
