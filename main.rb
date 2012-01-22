@@ -43,11 +43,13 @@ class ClassTreeGraphBuilder
     defs = []
     header_files.each do |file_name|
       File.open(file_name) do |f|
+      	# находим определения классов, без параметров шаблона
         all_defs = f.read.scan(/(?:template\s*<[^>]+>\s*)?(?:class|struct)\s*(\w+)(?:\s*:\s*([\w\s,<>]+))?\s*\{/m)
         all_defs.each do |one_def|
           class_define = ClassDefine.new(one_def.shift)
 
           one_def.each do |all_parents_str|
+          	# отрезаем параметры шаблонов
             all_parents_arr = all_parents_str.strip.gsub(/<[^>]+>/, '').split(/\s*,\s*/)
             all_parents_arr.each do |parent_str|
               parent_arr = parent_str.split(/\s+/)
