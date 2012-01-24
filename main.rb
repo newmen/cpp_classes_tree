@@ -18,7 +18,9 @@ class ClassTreeGraphBuilder
   end
 
   def build
-    class_defines = find_all_defs(@header_files)
+    sort_headers(@header_files.sort)
+    class_defines = find_all_defs(@sorted_headers)
+    #class_defines = find_all_defs(@header_files)
 
     g = RGL::DirectedAdjacencyGraph[]
     class_defines.each do |class_define|
@@ -37,6 +39,31 @@ class ClassTreeGraphBuilder
   def find_all_header_files(path)
     Dir.chdir(path)
     Dir['*.h']
+  end
+
+  def find_includes(file_name)
+    included_files = nil
+    if File.exist?(file_name)
+      File.open(file_name) do |f|
+        included_files = f.read.scan(/#include\s*"([\w\.]+)"/)
+      end
+    end
+    included_files.flatten! if included_files
+    included_files
+  end
+
+  def sort_headers(header_files)
+    return unless header_files
+
+    @sorted_headers ||= []
+    header_files.each do |file_name|
+      next if @sorted_headers.include?(file_name)
+
+      included_files = find_includes(file_name)
+      sort_headers(included_files)
+      
+      @sorted_headers << file_name
+    end
   end
 
   def find_all_defs(header_files)
