@@ -1,3 +1,5 @@
+# coding: utf-8
+
 require 'rgl/adjacency'
 require 'rgl/dot'
 
@@ -56,13 +58,18 @@ class ClassTreeGraphBuilder
     return unless header_files
 
     @sorted_headers ||= []
+    @visited_files ||= []
     header_files.each do |file_name|
       next if @sorted_headers.include?(file_name)
 
-      included_files = find_includes(file_name)
-      sort_headers(included_files)
-      
+      unless @visited_files.include?(file_name)
+        included_files = find_includes(file_name)
+        @visited_files << file_name
+        sort_headers(included_files)
+      end
+
       @sorted_headers << file_name
+      @visited_files.clear
     end
   end
 
@@ -94,11 +101,14 @@ end
 
 def main
   if ARGV.size != 2
-    raise 'Wrong number of arguments'
+    puts 'Нужно запускать с двумя параметрами, первый - путь до проекта, второй - название файла графа'
+    puts "Например: ruby #{__FILE__} ~/c++/hello_world classes-tree"
   end
 
   path = ARGV[0]
+  #path = '/home/newmen/c++/github/DCI-NIDS'
   image_file_name = ARGV[1]
+  #image_file_name = 'tree'
 
   graph_builder = ClassTreeGraphBuilder.new(path, image_file_name)
   graph_builder.build
