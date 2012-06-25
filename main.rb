@@ -76,6 +76,7 @@ class ClassTreeGraphBuilder
   def find_all_defs(header_files)
     defs = []
     header_files.each do |file_name|
+      next unless File.exist?(file_name)
       File.open(file_name) do |f|
       	# находим определения классов, без параметров шаблона
         all_defs = f.read.scan(/(?:template\s*<[^>]+>\s*)?(?:class|struct)\s*(\w+)(?:\s*:\s*([\w\s,<>]+))?\s*\{/m)
