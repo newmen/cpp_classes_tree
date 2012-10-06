@@ -2,6 +2,7 @@
 
 require 'rgl/adjacency'
 require 'rgl/dot'
+require 'docopt'
 
 class ClassDefine
   attr_accessor :parents
@@ -14,8 +15,9 @@ class ClassDefine
 end
 
 class ClassTreeGraphBuilder
-  def initialize(path, image_file_name)
-    @header_files = find_all_header_files(path)
+  def initialize(path, image_file_name, recursive_find)
+    @path_to_project = path
+    @header_files = find_all_header_files(path, recursive_find)
     @image_file_name = image_file_name
   end
 
@@ -33,14 +35,21 @@ class ClassTreeGraphBuilder
 
     puts "Complete"
 
-    g.write_to_graphic_file('png', @image_file_name)
+    g.write_to_graphic_file('png', "#@path_to_project/#@image_file_name")
   end
 
   private
 
-  def find_all_header_files(path)
-    Dir.chdir(path)
-    Dir['*.h']
+  def find_all_header_files(dir, recursive_find)
+    result = Dir["#{dir}/*.h"]
+    if recursive_find
+      # i like it %)
+      result | Dir["#{dir}/*/"].inject([]) do |acc, inner_dir|
+        acc | find_all_header_files(inner_dir, recursive_find)
+      end
+    else
+      result
+    end
   end
 
   def find_includes(file_name)
@@ -101,18 +110,27 @@ class ClassTreeGraphBuilder
 end
 
 def main
-  if ARGV.size != 2
-    puts 'Нужно запускать с двумя параметрами, первый - путь до проекта, второй - название файла графа'
-    puts "Например: ruby #{__FILE__} ~/c++/hello_world classes-tree"
+  doc = <<HEREHELP
+Usage:
+  #{__FILE__} [options]
+
+Options:
+  -h, --help             Этот хелп
+  -d, --dir=DIR          Директория проекта, например ~/c++/hello_world
+  -i, --image_name=NAME  Название граф-файла [default: classes_tree]
+  -r, --recursive        Искать файлы рекурсивно
+HEREHELP
+
+  begin
+    options = Docopt::docopt(doc)
+
+    graph_builder = ClassTreeGraphBuilder.new(options['--dir'],
+                                              options['--image_name'],
+                                              options['--recursive'])
+    graph_builder.build
+  rescue Docopt::Exit => e
+    puts e.message
   end
-
-  path = ARGV[0]
-  #path = '/home/newmen/c++/github/DCI-NIDS'
-  image_file_name = ARGV[1]
-  #image_file_name = 'tree'
-
-  graph_builder = ClassTreeGraphBuilder.new(path, image_file_name)
-  graph_builder.build
 end
 
 main
