@@ -35,7 +35,10 @@ class ClassTreeGraphBuilder
 
     puts "Complete"
 
-    g.write_to_graphic_file('png', "#@path_to_project/#@image_file_name")
+    path_to_image = "#@path_to_project/#@image_file_name"
+    ext = 'png'
+    g.write_to_graphic_file(ext, path_to_image)
+    puts "Saved to #{path_to_image}.#{ext}"
   end
 
   private
